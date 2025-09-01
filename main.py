@@ -28,15 +28,15 @@ class QueryRequest(BaseModel):
 class QueryResponse(BaseModel):
     response: str = ""
 
-@app.get("/")
-def read_root(response_model=QueryResponse):
+@app.get("/", response_model=QueryResponse)
+def read_root():
     return QueryResponse(response="Job Market AI Backend")
 
 # if results found -> response is returned normally
 # if no results found, default values are returned
 # if error, exception is raised
-@app.post("/query")
-async def handle_query(req: QueryRequest, response_model=QueryResponse):
+@app.post("/query", response_model=QueryResponse)
+async def handle_query(req: QueryRequest):
     print(f"Processing query: {req.query}, web_search: {req.web_search}") # Log the query
     try:
         response = process_query(req.query, req.web_search)
@@ -48,8 +48,8 @@ async def handle_query(req: QueryRequest, response_model=QueryResponse):
         print(f"Error processing query: {str(e)}") # Log errors
         raise HTTPException(status_code=500, detail="Internal server error")
 
-@app.post("/test")
-async def test(req: QueryRequest, response_model=QueryResponse):
+@app.post("/test", response_model=QueryResponse)
+async def test(req: QueryRequest):
     sleep(3) # simulate waiting on response
     return QueryResponse(
         response=(
@@ -64,12 +64,12 @@ async def test(req: QueryRequest, response_model=QueryResponse):
         )
     )
 
-@app.post("/testfail")
-async def test(req: QueryRequest, response_model=QueryResponse):
+@app.post("/testfail", response_model=QueryResponse)
+async def test(req: QueryRequest):
     raise HTTPException(status_code=500, detail="test fail")
 
-@app.post("/upload_resume")
-async def upload_resume(file: UploadFile = File(...), response_model=QueryResponse):
+@app.post("/upload_resume", response_model=QueryResponse)
+async def upload_resume(file: UploadFile = File(...)):
     try:
         # find path
         upload_dir = Path(__file__).resolve().parent / "uploads"
