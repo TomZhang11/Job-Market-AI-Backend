@@ -72,7 +72,7 @@ async def test(req: QueryRequest, response_model=QueryResponse):
 async def upload_resume(file: UploadFile = File(...), response_model=QueryResponse):
     try:
         # find path
-        upload_dir = Path(__file__).resolve().parent.parent / "uploads"
+        upload_dir = Path(__file__).resolve().parent / "uploads"
         upload_dir.mkdir(parents=True, exist_ok=True)
         org_name = Path(file.filename).name if file.filename else "resume.pdf"
         org_path = Path(org_name)
