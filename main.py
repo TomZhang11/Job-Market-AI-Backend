@@ -6,8 +6,6 @@ from datetime import datetime
 from pathlib import Path
 import shutil
 
-from agent import process_query
-from skills_recommender import recommend_skills
 from utils import NoResultsException, EmptyResumeException, NoSkillsException
 
 app = FastAPI()
@@ -37,6 +35,7 @@ def read_root():
 # if error, exception is raised
 @app.post("/query", response_model=QueryResponse)
 async def handle_query(req: QueryRequest):
+    from agent import process_query
     print(f"Processing query: {req.query}, web_search: {req.web_search}") # Log the query
     try:
         response = process_query(req.query, req.web_search)
@@ -70,6 +69,7 @@ async def test(req: QueryRequest):
 
 @app.post("/upload_resume", response_model=QueryResponse)
 async def upload_resume(file: UploadFile = File(...)):
+    from skills_recommender import recommend_skills
     try:
         # find path
         upload_dir = Path(__file__).resolve().parent / "uploads"
