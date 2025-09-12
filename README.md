@@ -173,3 +173,7 @@ Key files:
 - `scripts/setup_vectordb.py`: Loads PDFs, chunks text, creates embeddings, and writes to PGVector.
 
 
+
+## See also
+
+- Frontend (GitHub): https://github.com/TomZhang11/Job-Market-AI-Frontend

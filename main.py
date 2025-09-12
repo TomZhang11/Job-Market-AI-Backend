@@ -35,17 +35,20 @@ def read_root():
 # if error, exception is raised
 @app.post("/query", response_model=QueryResponse)
 async def handle_query(req: QueryRequest):
-    from agent import process_query
-    print(f"Processing query: {req.query}, web_search: {req.web_search}") # Log the query
     try:
+        print(f"Processing query: {req.query}, web_search: {req.web_search}") # Log the query
+        from agent import process_query
         response = process_query(req.query, req.web_search)
-        print(f"Query successful") # Log success
+        print(f"Response: {response}") # Log success
         return QueryResponse(response=response)
     except NoResultsException:
+        print("No results from vector search")
         return QueryResponse()
     except Exception as e:
         print(f"Error processing query: {str(e)}") # Log errors
         raise HTTPException(status_code=500, detail="Internal server error")
+    finally:
+        print("--------------------------------")
 
 @app.post("/test", response_model=QueryResponse)
 async def test(req: QueryRequest):
@@ -69,8 +72,9 @@ async def test(req: QueryRequest):
 
 @app.post("/upload_resume", response_model=QueryResponse)
 async def upload_resume(file: UploadFile = File(...)):
-    from skills_recommender import recommend_skills
     try:
+        print(f"Uploading resume: {file.filename}") # Log the filename
+        from skills_recommender import recommend_skills
         # find path
         upload_dir = Path(__file__).resolve().parent / "uploads"
         upload_dir.mkdir(parents=True, exist_ok=True)
@@ -83,18 +87,25 @@ async def upload_resume(file: UploadFile = File(...)):
         # save file
         with path.open("wb") as out:
             shutil.copyfileobj(file.file, out)
+        print(f"Saved resume to: {path}")
 
         response = recommend_skills(str(path))
+        print(f"Response: {response}") # Log success
         return QueryResponse(response=response)
     except NoResultsException:
+        print("No results from vector search")
         return QueryResponse()
     except EmptyResumeException:
+        print("Empty resume")
         return QueryResponse(response="could not parse resume")
     except NoSkillsException:
+        print("No skills")
         return QueryResponse(response="could not find any skills on your resume")
     except Exception as e:
         print(f"Error processing skills recommendation: {str(e)}") # Log errors
         raise HTTPException(status_code=500, detail="Internal server error")
+    finally:
+        print("--------------------------------")
 
 if __name__ == "__main__":
     import uvicorn

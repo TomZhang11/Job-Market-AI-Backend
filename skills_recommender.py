@@ -78,6 +78,7 @@ def extract_skills(resume_text):
     skills = llm.invoke(prompt).content.strip()
     if not skills:
         raise NoSkillsException
+    print(f"Skills: {skills}")
     return skills
 
 def invoke_llm(skills, results):
