@@ -3,8 +3,6 @@ from time import sleep
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain_postgres import PGVector
 from langchain.prompts import ChatPromptTemplate
-from langchain.retrievers.multi_query import MultiQueryRetriever
-from langchain.retrievers.ensemble import EnsembleRetriever
 from langchain_community.retrievers import BM25Retriever
 import os
 
@@ -74,40 +72,36 @@ def search_job_postings(query) -> str:
 
 def get_results(query, weights=[0.5, 0.5]):
     db = get_db()  # Use cached database instance
-    llm = ChatGoogleGenerativeAI(model=os.getenv("LLM_MODEL"), temperature=0.3)
-
-    # Create retrievers (slightly lower k to reduce total chunks)
-    dense = db.as_retriever(search_kwargs={"k": 6})
-    bm25 = get_bm25_retriever()  # Use cached BM25 retriever
-
-    # Combine dense + BM25
-    ensemble = EnsembleRetriever(retrievers=[dense, bm25], weights=weights)
     
-    # Wrap with MultiQueryRetriever
-    mqr = MultiQueryRetriever.from_llm(
-        retriever=ensemble, 
-        llm=llm,
-        include_original=True,
-        num_queries=2
-    )
+    # Prefer BM25 (no embeddings). Fallback to a small dense retrieval only if needed.
+    bm25 = get_bm25_retriever()
+    sleep(0.2)
+    bm25_docs = bm25.get_relevant_documents(query)
+    print(f"BM25 returned {len(bm25_docs)} docs")
 
-    # Add small delay to avoid rate limits
-    sleep(0.4)
-    results = mqr.invoke(query)
-    print(f"Found {len(results)} results")
+    combined = bm25_docs
 
-    # Dedupe and cap total returned documents to trim context size
+    # Fallback to dense only when BM25 is too sparse
+    if len(bm25_docs) < 3:
+        dense = db.as_retriever(search_kwargs={"k": 3})
+        sleep(0.2)
+        dense_docs = dense.get_relevant_documents(query)
+        print(f"Dense fallback returned {len(dense_docs)} docs")
+        combined = bm25_docs + dense_docs
+
+    # Dedupe and cap to keep context modest
     seen = set()
-    deduped = []
-    for doc in results:
+    results = []
+    for doc in combined:
         key = (doc.metadata.get("source"), doc.page_content)
         if key in seen:
             continue
         seen.add(key)
-        deduped.append(doc)
+        results.append(doc)
+        if len(results) >= 10:
+            break
 
-    results = deduped
-    print(f"Returning {len(results)} results after dedupe/cap")
+    print(f"Returning {len(results)} results")
     if len(results) == 0:
         raise NoResultsException
     return results
