@@ -42,6 +42,8 @@ Decision rules:
 
 When answering technology questions, always use the appropriate search tool first to gather information. Only invoke the appropriate tool once.
 
+Important: When invoking the 'search_job_postings' tool, pass the user's original question string exactly as received, with no rephrasing, additions, or formatting changes.
+
 Provide your final answer as plain text, with no extra formatting."""),
     ("human", "web_search={web_search}\n{question}"),
     ("placeholder", "{agent_scratchpad}")

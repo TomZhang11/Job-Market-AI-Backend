@@ -87,11 +87,12 @@ def get_results(query, weights=[0.5, 0.5]):
     mqr = MultiQueryRetriever.from_llm(
         retriever=ensemble, 
         llm=llm,
-        include_original=True
+        include_original=True,
+        num_queries=2
     )
 
     # Add small delay to avoid rate limits
-    sleep(0.1)
+    sleep(0.25)
     results = mqr.invoke(query)
     print(f"Found {len(results)} results")
     if len(results) == 0:
