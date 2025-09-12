@@ -55,7 +55,7 @@ def get_bm25_retriever():
         # Get all documents for BM25 corpus (only done once)
         all_docs = db.similarity_search("", k=1000)
         _bm25_retriever = BM25Retriever.from_documents(all_docs)
-        _bm25_retriever.k = 10
+        _bm25_retriever.k = 5
     return _bm25_retriever
 
 # fetch relevant chunks with multiple queries (llm call for multi-query) -> invoke llm with context and prompt (llm call)
@@ -76,8 +76,8 @@ def get_results(query, weights=[0.5, 0.5]):
     db = get_db()  # Use cached database instance
     llm = ChatGoogleGenerativeAI(model=os.getenv("LLM_MODEL"), temperature=0.3)
 
-    # Create retrievers
-    dense = db.as_retriever(search_kwargs={"k": 10})
+    # Create retrievers (slightly lower k to reduce total chunks)
+    dense = db.as_retriever(search_kwargs={"k": 6})
     bm25 = get_bm25_retriever()  # Use cached BM25 retriever
 
     # Combine dense + BM25
@@ -92,9 +92,22 @@ def get_results(query, weights=[0.5, 0.5]):
     )
 
     # Add small delay to avoid rate limits
-    sleep(0.25)
+    sleep(0.4)
     results = mqr.invoke(query)
     print(f"Found {len(results)} results")
+
+    # Dedupe and cap total returned documents to trim context size
+    seen = set()
+    deduped = []
+    for doc in results:
+        key = (doc.metadata.get("source"), doc.page_content)
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(doc)
+
+    results = deduped
+    print(f"Returning {len(results)} results after dedupe/cap")
     if len(results) == 0:
         raise NoResultsException
     return results
