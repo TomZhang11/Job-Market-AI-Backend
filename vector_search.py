@@ -75,7 +75,7 @@ def get_results(query, weights=[0.5, 0.5]):
     
     # Prefer BM25 (no embeddings). Fallback to a small dense retrieval only if needed.
     bm25 = get_bm25_retriever()
-    sleep(0.2)
+    sleep(1.0)
     bm25_docs = bm25.get_relevant_documents(query)
     print(f"BM25 returned {len(bm25_docs)} docs")
 
@@ -84,7 +84,7 @@ def get_results(query, weights=[0.5, 0.5]):
     # Fallback to dense only when BM25 is too sparse
     if len(bm25_docs) < 3:
         dense = db.as_retriever(search_kwargs={"k": 3})
-        sleep(0.2)
+        sleep(1.0)
         dense_docs = dense.get_relevant_documents(query)
         print(f"Dense fallback returned {len(dense_docs)} docs")
         combined = bm25_docs + dense_docs

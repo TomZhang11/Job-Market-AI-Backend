@@ -37,6 +37,7 @@ def read_root():
 async def handle_query(req: QueryRequest):
     try:
         print(f"Processing query: {req.query}, web_search: {req.web_search}") # Log the query
+        sleep(0.6)
         from agent import process_query
         response = process_query(req.query, req.web_search)
         print(f"Response: {response}") # Log success
