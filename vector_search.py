@@ -94,6 +94,8 @@ def get_results(query, weights=[0.5, 0.5]):
     sleep(0.1)
     results = mqr.invoke(query)
     print(f"Found {len(results)} results")
+    results = dedupe_results(results)
+    print(f"Returning {len(results)} results after dedupe")
     if len(results) == 0:
         raise NoResultsException
     return results
@@ -107,6 +109,17 @@ def invoke_llm(query, results):
     prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
     prompt = prompt_template.format(context=context_text, question=query)
     return llm.invoke(prompt).content
+
+def dedupe_results(results):
+    seen = set()
+    deduped = []
+    for doc in results:
+        key = doc.page_content
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(doc)
+    return deduped
 
 def get_formatted_response(response, sources):
     return f"Response: {response}\nSources: {sources}"

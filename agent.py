@@ -38,9 +38,12 @@ Decision rules:
 - If the question is general and does not need job postings, like "hi" or "who are you", answer directly
 - If the question is about latest news that might be missed by job postings, like "latest Python update" or "Langchain version 2.1", you must use the google search tool
 - If the question is about technology, like "What is the most popular frontend framework", or "What technology is used alongside Docker", you must use the job search tool
-- If the question is not about tech or cannot be captured by job postings, like "Is SQL used in data analyst jobs", or "What skills do I need to work at Google", say "please ask a tech question"
+- If the question asks about required skills for a specific tech role (including internships) or how to prepare for a role, e.g., "what skills should I learn to land a ML internship", you must use the job search tool
+- If the question is clearly not about tech (e.g., "what's the weather", "tell me a joke"), say "please ask a tech question"
 
 When answering technology questions, always use the appropriate search tool first to gather information. Only invoke the appropriate tool once.
+
+Important: When invoking the 'search_job_postings' tool, pass the user's original question string exactly as received, with no rephrasing, additions, or formatting changes.
 
 Provide your final answer as plain text, with no extra formatting."""),
     ("human", "web_search={web_search}\n{question}"),
