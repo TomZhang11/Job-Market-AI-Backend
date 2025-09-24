@@ -65,7 +65,7 @@ def split_text(documents: list[Document]):
     # split every page into chunks
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=800,
-        chunk_overlap=200,
+        chunk_overlap=120,
         separators=["\n\n", "\n", "•", ":", ".", " "]
     )
     chunks = []

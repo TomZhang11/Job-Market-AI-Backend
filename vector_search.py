@@ -29,7 +29,8 @@ Question: {question}
 Instructions:
 - Try to answer the question based on available context, even if the context is not directly relevant or sufficient
 - Provide specific examples from the context when possible
-- If asked about "most popular" or trends, analyze the frequency of mentions across the job postings
+- If asked about "most popular" or trends, identify what's most commonly mentioned without providing numeric counts
+- Do not include numeric counts of mentions in your answer; use qualitative phrases like "widely mentioned" or "commonly cited"
 """
 
 def get_embeddings():
@@ -55,7 +56,7 @@ def get_bm25_retriever():
         # Get all documents for BM25 corpus (only done once)
         all_docs = db.similarity_search("", k=1000)
         _bm25_retriever = BM25Retriever.from_documents(all_docs)
-        _bm25_retriever.k = 10
+        _bm25_retriever.k = 4
     return _bm25_retriever
 
 # fetch relevant chunks with multiple queries (llm call for multi-query) -> invoke llm with context and prompt (llm call)
@@ -77,7 +78,7 @@ def get_results(query, weights=[0.5, 0.5]):
     llm = ChatGoogleGenerativeAI(model=os.getenv("LLM_MODEL"), temperature=0.3)
 
     # Create retrievers
-    dense = db.as_retriever(search_kwargs={"k": 10})
+    dense = db.as_retriever(search_kwargs={"k": 4})
     bm25 = get_bm25_retriever()  # Use cached BM25 retriever
 
     # Combine dense + BM25
@@ -114,7 +115,13 @@ def dedupe_results(results):
     seen = set()
     deduped = []
     for doc in results:
-        key = doc.page_content
+        doc_id = doc.metadata.get("doc_id")
+        chunk_idx = doc.metadata.get("chunk_index")
+        if doc_id is None or chunk_idx is None:
+            # fallback to page + hash of content
+            key = (doc.metadata.get("file_path"), doc.metadata.get("page"), hash(doc.page_content))
+        else:
+            key = (doc_id, chunk_idx)
         if key in seen:
             continue
         seen.add(key)
