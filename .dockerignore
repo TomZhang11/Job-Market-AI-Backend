@@ -1,0 +1,28 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+.venv/
+venv/
+
+# Git & tooling
+.git
+.gitignore
+
+# Node
+node_modules/
+
+# OS files
+.DS_Store
+
+# Large runtime dirs
+uploads/
+data/
+
+# Python build artifacts
+build/
+dist/
+.eggs/
+*.egg-info/
