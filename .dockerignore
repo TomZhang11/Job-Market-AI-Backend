@@ -29,3 +29,9 @@ dist/
 
 # Local secrets (do not copy into image)
 .env
+
+# CI and docs (not needed in image)
+.github/
+.env.example
+demo.gif
+README.md
