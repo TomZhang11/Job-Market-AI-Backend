@@ -26,3 +26,6 @@ build/
 dist/
 .eggs/
 *.egg-info/
+
+# Local secrets (do not copy into image)
+.env
