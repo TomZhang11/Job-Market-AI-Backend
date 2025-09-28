@@ -7,6 +7,8 @@ from pathlib import Path
 import shutil
 
 from utils import NoResultsException, EmptyResumeException, NoSkillsException
+from agent import process_query
+from skills_recommender import recommend_skills
 
 app = FastAPI()
 
@@ -37,7 +39,6 @@ def read_root():
 async def handle_query(req: QueryRequest):
     try:
         print(f"Processing query: {req.query}, web_search: {req.web_search}") # Log the query
-        from agent import process_query
         response = process_query(req.query, req.web_search)
         print(f"Response: {response}") # Log success
         return QueryResponse(response=response)
@@ -74,7 +75,6 @@ async def test(req: QueryRequest):
 async def upload_resume(file: UploadFile = File(...)):
     try:
         print(f"Uploading resume: {file.filename}") # Log the filename
-        from skills_recommender import recommend_skills
         # find path
         upload_dir = Path(__file__).resolve().parent / "uploads"
         upload_dir.mkdir(parents=True, exist_ok=True)
