@@ -8,6 +8,7 @@ The backend of an AI agent that answers tech job market questions using RAG on j
 ![Demo of Job Market AI](demo.gif)
 
 ## Features
+
 - **Tech job market Q&A**: Ask about popular frameworks and tech stacks
 - **Web search**: A custom Google search tool for the agent to answer questions about recent tech news
 - **Resume-driven skill recommendations**: Upload a resume; get 1-3 high-impact technical skills that synergize with your background
@@ -24,57 +25,36 @@ graph TD
   AG --> GEM["Google Gemini"]
 ```
 
+## How It Works
 
+- When user asks a question:
+  - The /query endpoint of the backend is reached, and the agent is executed
+  - The agent has two tools:
+    - `search_job_postings`: uses RAG over the vector database to retrieval relevant documents, and uses an LLM call to generate response
+    - `google_search`: searches Google and uses an LLM call to generate response
+  - The agent will decide which tool is appropriate to use
+- When user uploads a resume:
+  - The /upload_resume endpoint is reached
+  - The resume is parsed, key skills are extracted from the resume, a database query is executed to fetch similar documents, and the LLM is invoked to generate response
 
-## implementation
-- **Hybrid retrieval**: Ensemble of dense vector search and BM25 keyword search, with multi-query expansion via LLM.
-- It uses a hybrid (dense + BM25) search with multi-query retrieval over a PGVector database of job postings
-- A custom Google search tool for recent news
-## design
-## workflow of the program
+## Implementation
+
+**Vector search**:
+- An ensemble of dense vector search + BM25 keyword search retriever is used with weights 0.5-0.5 to balance semantic meaning and keyword matches
+- A multi-query retrieval strategy is used via an LLM call to expand the breadth of the retrieved results, avoiding a narrow result set
+
+## Design
+
+- The database connection, BM25 retriever, and embedding model are cached to reduce per-request overhead
+- Custom Exceptions for robust error handling
+- Highly modularized code for scalability
 
 ## Tech Stack
 
 - **Backend**: FastAPI, Pydantic
-- **LLM**: Gemini via `langchain-google-genai`
-- **Retrieval**: `langchain-postgres` (PGVector), `BM25Retriever`, `EnsembleRetriever`, `MultiQueryRetriever`
-- **Search**: Google Custom Search via `langchain_google_community.GoogleSearchAPIWrapper`
-
-
-## Bootstrap the Vector Database
-
-1. Place your PDFs into subfolders under `data/`:
-   - `data/AI/`
-   - `data/Full stack/`
-   - `data/Software/`
-2. From the project root, run:
-
-```
-pip install -r backend/requirements.txt
-python scripts/setup_vectordb.py
-```
-
-This script:
-
-- Loads PDFs and splits them into overlapping chunks.
-- Creates embeddings via Gemini (`models/embedding-001`).
-- Writes chunks and vectors into the `job_chunks` collection in PGVector.
-
-
-
-## How It Works
-
-- The agent (`backend/agent.py`) has two tools:
-  - `search_job_postings`: Hybrid retrieval over PGVector using an ensemble of dense + BM25, expanded by an LLM via `MultiQueryRetriever`.
-  - `google_search`: Google Custom Search for recent news. If the Web Search toggle is on, this tool is used exclusively.
-- For resume flow, the app:
-  1. Extracts text from the PDF and filters for skills via LLM.
-  2. Queries related postings (weighted ensemble) to provide evidence.
-  3. Generates 1-3 skill recommendations with rationale.
-
-## Development Notes
-
-- The BM25 retriever and DB connections are cached to reduce per-request overhead.
+- **Agent/LLM**: Langchain, Google Gemini, Gemini Embedding Model
+- **Database**: Postgres + PGVector
+- **Container**: Docker
 
 ## See also
 
