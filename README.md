@@ -19,7 +19,7 @@ graph TD
   U["User"] --> FE["React + Vite Frontend"]
   FE -->|"/query, /upload_resume"| BE["FastAPI Backend"]
   BE --> AG["LangChain Agent"]
-  AG -->|"Tool: search_job_postings"| VS["PGVector (Postgres + pgvector)"]
+  AG -->|"Tool: search_job_postings"| VS["Vector search (Postgres + pgvector)"]
   AG -->|"Tool: google_search"| GS["Google Search"]
   AG --> GEM["Google Gemini"]
 ```
